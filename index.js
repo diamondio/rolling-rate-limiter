@@ -34,7 +34,7 @@ function RateLimiter (options) {
       };
     }
 
-    return function(id, cb) {
+    return function(id, peek, cb) {
       if (!cb) {
         cb = id;
         id = "";
@@ -50,7 +50,7 @@ function RateLimiter (options) {
       var batch = redis.multi();
       batch.zremrangebyscore(key, 0, clearBefore);
       batch.zrange(key, 0, -1, 'withscores');
-      batch.zadd(key, now, uuid());
+      if (!peek) batch.zadd(key, now, uuid());
       batch.expire(key, Math.ceil(interval / 1000000)); // convert to seconds, as used by redis ttl.
       batch.exec(function(err, resultArr) {
         if (err) return cb(err);
